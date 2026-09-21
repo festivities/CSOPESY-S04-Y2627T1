@@ -1,0 +1,38 @@
+## --- Visual Studio Architecture & Cache ---
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## --- Build Artifacts & Output Folders ---
+# Visual Studio generates these dynamically on every compile
+[Dd]ebug/
+[Ww]in32/
+[Xx]64/
+[Rr]elease/
+[Aa]rm/
+[Aa]rm64/
+x64/
+x86/
+
+## --- Intermediate Build Files ---
+# Compiled object files, precompiled headers, and linkers
+*.obj
+*.pdb
+*.ilk
+*.aps
+*.idb
+*.tlog
+*.ipch
+*.log
+*.recipe
+*.iobj
+*.ipdb
+
+## --- Database & Diagnostic Files ---
+# Intellisense auto-generated browsing databases
+*.sdf
+*.opensdf
+*.db
+*.opendb
