@@ -1,6 +1,7 @@
 // main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include "OperatingSystem.h"
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -14,14 +15,17 @@ int main() {
 		
 		// prompt user input
 		std::cout << "> Enter a command: ";
-		std::getline(std::cin, command);
+		// exit the program if input fails or reaches end of input
+		if (!std::getline(std::cin, command)) {
+			return 0;
+		}
 
 		if (command == "exit") {
 			// immediately exit program
 			return 0;
 		} else if (command == "clear") {
-			//  clear based on https://stackoverflow.com/questions/17335816/clear-screen-using-c
-			std::cout << "\033[2J\033[1;1H";
+			//  clear the console using cls
+			std::system("cls");
 			os.printMainMenu();
 		}
 		else if (command == "initialize") {
