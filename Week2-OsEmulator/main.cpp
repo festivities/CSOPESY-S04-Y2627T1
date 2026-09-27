@@ -21,7 +21,8 @@ int main() {
 		}
 
 		if (command == "exit") {
-			// immediately exit program
+			// immediately exit 
+			os.stopMarquee();
 			return 0;
 		} else if (command == "clear") {
 			//  clear the console using cls
@@ -48,7 +49,30 @@ int main() {
 			// display available commands
 			os.printCommands();
 		}
-		
+		else if (command == "start_marquee") {
+			// start marquee animation
+			os.startMarquee();
+		}
+		else if (command == "stop_marquee") {
+			// stop marquee animation
+			os.stopMarquee();
+		}
+		else if (command.rfind("set_text ", 0) == 0) {
+			// set marquee text
+			std::string text = command.substr(9); // extract text after "set_text "
+			os.setMarqueeText(text);
+		}
+		else if (command.rfind("set_speed ", 0) == 0) {
+			// set marquee speed
+			std::string speedStr = command.substr(10); // extract speed after "set_speed "
+			try {
+				int speed = std::stoi(speedStr);
+				os.setMarqueeSpeed(speed);
+			}
+			catch (const std::invalid_argument&) {
+				std::cout << "Please enter a valid integer." << std::endl;
+			}
+		}
 		else {
 			// unrecognized command
 			std::cout << "Command \"" << command << "\" not recognized." << std::endl;

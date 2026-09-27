@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Marquee.h"
 #include <iostream>
 #include <string>
 #include <map>
@@ -8,6 +9,7 @@ class OperatingSystem {
 private:
 	// supported commands and their descriptions
 	std::map<std::string, std::string> commands;
+	Marquee marquee;
 public:
 
 	// Constructor
@@ -28,4 +30,10 @@ public:
 	// print menu and commands
 	void printMainMenu() const;
 	void printCommands() const;
+
+	// Marquee control
+	void startMarquee();
+	void stopMarquee();
+	void setMarqueeText(const std::string& text);
+	void setMarqueeSpeed(int speed);
 };
