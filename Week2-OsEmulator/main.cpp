@@ -43,7 +43,13 @@ int main() {
 		} else if (command == "report-util") {
 			// report utilization
 			os.reportUtil();
-		} else {
+		}
+		else if (command == "help") {
+			// display available commands
+			os.printCommands();
+		}
+		
+		else {
 			// unrecognized command
 			std::cout << "Command \"" << command << "\" not recognized." << std::endl;
 		}

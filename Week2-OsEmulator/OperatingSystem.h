@@ -5,7 +5,7 @@
 #include <map>
 
 class OperatingSystem {
-private: 
+private:
 	// supported commands and their descriptions
 	std::map<std::string, std::string> commands;
 public:
@@ -22,7 +22,10 @@ public:
 	void schedulerStart() const;
 	void schedulerStop() const;
 	void reportUtil() const;
+
 	// exit and clear handled in main
 
+	// print menu and commands
 	void printMainMenu() const;
+	void printCommands() const;
 };

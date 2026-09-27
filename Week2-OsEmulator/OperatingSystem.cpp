@@ -1,4 +1,5 @@
 #include "OperatingSystem.h"
+#include <iomanip> 
 
 // Constructor implementation
 OperatingSystem::OperatingSystem() {
@@ -11,7 +12,8 @@ OperatingSystem::OperatingSystem() {
 		{"screen", "Something"},
 		{"scheduler-start", "Start the scheduler"},
 		{"scheduler-stop", "Stop the scheduler"},
-		{"report-util", "Something"}
+		{"report-util", "Something"},
+		{"help", "Display available commands"}
 	};
 }
 
@@ -51,6 +53,16 @@ void OperatingSystem::printMainMenu() const {
 )" << std::endl;
 
 	std::cout << "Hello, Welcome to CSOPESY - GROUP 6 Command Line!" << std::endl;
-	std::cout << "Type 'exit' to quit, 'clear' to clear the screen." << std::endl << std::endl;
-	std::cout << "** IMPORTANT: Type 'initialize' to load config and start system **" << std::endl;
+	std::cout << "Type 'exit' to quit, 'clear' to clear the screen." << std::endl;
+	//std::cout << "** IMPORTANT: Type 'initialize' to load config and start system **" << std::endl;
+}
+
+// Display commands
+void OperatingSystem::printCommands() const {
+	std::cout << "Available commands:" << std::endl;
+	for (const auto& [command, description] : this->commands) {
+		std::cout << "  "
+			<< std::left << std::setw(20) << command // left align cmd names and set width = 20
+			<< ": " << description << std::endl;
+	}
 }
