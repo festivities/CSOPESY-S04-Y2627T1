@@ -1,3 +1,7 @@
+// CSOPESY S04-Y2627T1 - GROUP 6
+// This header file contains the declaration of the OperatingSystem class.
+//
+
 #pragma once
 
 #include "Marquee.h"
@@ -24,8 +28,8 @@ public:
 	void schedulerStart() const;
 	void schedulerStop() const;
 	void reportUtil() const;
-
-	// exit and clear handled in main
+	void clearScreen() const;
+	// exit handled in main
 
 	// print menu and commands
 	void printMainMenu() const;

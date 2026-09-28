@@ -1,8 +1,12 @@
+// CSOPESY S04-Y2627T1 - GROUP 6
+// This file contains the implementation of the OperatingSystem class, which manages
+// the CLI and the marquee animation. 
+//
 #include "OperatingSystem.h"
 #include <iomanip> 
 
 // Constructor implementation
-OperatingSystem::OperatingSystem() : marquee(30, 10) {
+OperatingSystem::OperatingSystem() : marquee(30) {
 	// set the supported commands and descriptions
 	this->commands = {
 		{"help", "Display available commands"},
@@ -10,10 +14,10 @@ OperatingSystem::OperatingSystem() : marquee(30, 10) {
 		{"exit", "Exit the program"},
 
 		{"initialize", "Initialize the operating system"},
-		{"screen", "Something"},
+		{"screen", "Show process information"},
 		{"scheduler-start", "Start the scheduler"},
 		{"scheduler-stop", "Stop the scheduler"},
-		{"report-util", "Something"},
+		{"report-util", "Report system utilization"},
 
 		// MARQUEE CONTROL COMMANDS
 		{"start_marquee", "Start marquee text animation"},
@@ -22,7 +26,7 @@ OperatingSystem::OperatingSystem() : marquee(30, 10) {
 		{"set_speed <speed>", "Set <speed> as the speed of the marquee animation in milliseconds"},
 	};
 
-	// marquee is 30x10 pixels, adjust if need
+	// marquee is 30 characters wide by default, adjust if need
 }
 
 // Getter implementation
@@ -49,6 +53,20 @@ void OperatingSystem::schedulerStop() const {
 
 void OperatingSystem::reportUtil() const {
 	std::cout << "report-util command recognized. Doing something." << std::endl;
+}
+
+void OperatingSystem::clearScreen() const {
+	if (this->marquee.getRunning()) {
+		// clear but keep marquee running
+		std::lock_guard<std::mutex> lk(Marquee::ConsoleMutex());
+		std::cout << "\033[2J\033[2;1H" << std::flush;
+
+	}
+	else {
+		// print main menu if marquee not running
+		std::system("cls");
+		OperatingSystem::printMainMenu();
+	}
 }
 
 // Display menu header
@@ -78,10 +96,15 @@ void OperatingSystem::printCommands() const {
 // Marquee control 
 void OperatingSystem::startMarquee() {
 	this->marquee.start();
+	std::cout << "Marquee animation started." << std::endl;
+
 }
 
 void OperatingSystem::stopMarquee() {
 	this->marquee.stop();
+	std::cout << "Marquee animation stopped." << std::endl;
+	
+	this->clearScreen();
 }
 
 void OperatingSystem::setMarqueeText(const std::string& text) {
