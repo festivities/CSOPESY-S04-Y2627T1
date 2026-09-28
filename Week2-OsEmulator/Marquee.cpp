@@ -60,9 +60,8 @@ void Marquee::stop() {
     }
 }
 
-std::atomic<bool> Marquee::getRunning() const {
-    std::lock_guard<std::mutex> lk(Marquee::ConsoleMutex());
-    return this->running.load();
+bool Marquee::getRunning() const {
+	return this->running.load();
 }
 
 void Marquee::setText(const std::string& text) {

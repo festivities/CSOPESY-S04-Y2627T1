@@ -55,7 +55,7 @@ public:
 	}
 
 	// getter
-	std::atomic<bool> getRunning() const;
+	bool getRunning() const;
 
 	// setters
 	void setText(const std::string& text);

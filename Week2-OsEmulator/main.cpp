@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include "Marquee.h"
 #include "OperatingSystem.h"
@@ -16,7 +17,7 @@ std::string trim(const std::string& text)
 	const char* WhiteSpace = " \t\v\r\n";
 	std::size_t start = text.find_first_not_of(WhiteSpace);
 	std::size_t end = text.find_last_not_of(WhiteSpace);
-	return start == end ? std::string() : text.substr(start, end - start + 1);
+	return start == std::string::npos ? std::string() : text.substr(start, end - start + 1);
 }
 
 int main() {
@@ -30,7 +31,7 @@ int main() {
 		// prompt user input (lock console while doing so)
 		{
 			std::lock_guard<std::mutex> lk(Marquee::ConsoleMutex());
-			std::cout << "> Enter a command: ";
+			std::cout << "Command>";
 		}
 		// exit the program if input fails or reaches end of input
 		if (!std::getline(std::cin, command)) {
@@ -121,6 +122,9 @@ int main() {
 			}
 			catch (const std::invalid_argument&) {
 				// not convertable to integer
+				std::cout << "Provided speed is not a valid integer." << std::endl;
+			}
+			catch (const std::out_of_range&) {
 				std::cout << "Provided speed is not a valid integer." << std::endl;
 			}
 		}

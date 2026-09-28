@@ -78,9 +78,14 @@ void OperatingSystem::printMainMenu() const {
 \____//____/\____/_/   /_____//____/  /_/
 )" << std::endl;
 
-	std::cout << "Hello, Welcome to CSOPESY - GROUP 6 Command Line!" << std::endl;
-	std::cout << "Type 'exit' to quit, 'clear' to clear the screen." << std::endl;
-	//std::cout << "** IMPORTANT: Type 'initialize' to load config and start system **" << std::endl;
+	std::cout << "Welcome to CSOPESY!" << std::endl << std::endl;
+	std::cout << "Group developer:" << std::endl;
+	std::cout << "Ong, David Zachary" << std::endl;
+	std::cout << "Ho, Denise Liana" << std::endl;
+	std::cout << "Valle, Jose Edgardo" << std::endl;
+	std::cout << "Biacora, Luis Gabriel" << std::endl << std::endl;
+	std::cout << "Version date:" << std::endl;
+	std::cout << "09/28/2026" << std::endl;
 }
 
 // Display commands
