@@ -96,8 +96,6 @@ void OperatingSystem::printCommands() const {
 // Marquee control 
 void OperatingSystem::startMarquee() {
 	this->marquee.start();
-	std::cout << "Marquee animation started." << std::endl;
-
 }
 
 void OperatingSystem::stopMarquee() {
