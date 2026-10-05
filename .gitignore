@@ -36,3 +36,6 @@ x86/
 *.opensdf
 *.db
 *.opendb
+
+# vcpkg stuff
+vcpkg_installed/
