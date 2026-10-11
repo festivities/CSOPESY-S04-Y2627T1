@@ -26,11 +26,11 @@ This project uses vcpkg in Manifest Mode (`vcpkg.json`) to manage dependencies (
 2. Open a terminal and run the integration command so Visual Studio detects the package manifest:
    vcpkg integrate install
 
-3. Open `DesktopUI.sln` file in Visual Studio 2022.
+3. Open `DesktopUI.slnx` file in Visual Studio 2022 (17.13+) or later.
 
 4. Ensure the build config is set to "x64"
 
 5. Build the solution (Ctrl + Shift + B)
-   *Note: the first vuild will take a few mins since vcpkg automatically downloads and compiles dependencies from source.*
+   *Note: the first build will take a few mins since vcpkg automatically downloads and compiles dependencies from source.*
 
 6. Run the Local Windows Debugger.
