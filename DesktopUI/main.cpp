@@ -306,9 +306,9 @@ int main() {
 	// TODO: use diff pngs per app
 	GLuint icon1 = 0, icon2 = 0, icon3 = 0;
 	int tw = 0, th = 0;
-	loadTextureFromFile("sample_icon.png", &icon1, &tw, &th);
-	loadTextureFromFile("sample_icon.png", &icon2, &tw, &th);
-	loadTextureFromFile("sample_icon.png", &icon3, &tw, &th);	
+	loadTextureFromFile("Icon1_TaskMan.png", &icon1, &tw, &th);
+	loadTextureFromFile("Icon2_FileMan.png", &icon2, &tw, &th);
+	loadTextureFromFile("Icon3_Search.png", &icon3, &tw, &th);	
 
 	// add widgets to UIManager
 	UIManager::getInstance().addWindow(std::make_shared<TaskManager>(icon1));
