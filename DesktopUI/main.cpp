@@ -328,10 +328,10 @@ int main() {
 	loadTextureFromFile("Icon2_FileMan.png", &icon2, &tw, &th);
 	loadTextureFromFile("Icon3_Search.png", &icon3, &tw, &th);	
 
-	// add widgets to UIManager
-	UIManager::getInstance().addWindow(std::make_shared<TaskManager>(icon1));
+	// add widgets to UIManager (task manager goes 3rd)
 	UIManager::getInstance().addWindow(std::make_shared<App2>(icon2));
 	UIManager::getInstance().addWindow(std::make_shared<App3>(icon3));
+	UIManager::getInstance().addWindow(std::make_shared<TaskManager>(icon1));
 
 	/* MAIN LOOP */
 	while (!glfwWindowShouldClose(window)) {
