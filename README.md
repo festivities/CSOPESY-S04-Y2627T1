@@ -1,7 +1,6 @@
 # Y2627T1 CSOPESY S04 – Group 6
 
-This repository contains all projects developed by **CSOPESY – S04, Group 6**.  
-See our **[Releases/Tags](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases)** to access project files as they were submitted, or check out the [Project Links](#project-links).
+This repository contains all projects developed by **CSOPESY – S04, Group 6**.  As certain projects may be incremental, please see our **[Releases/Tags](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases)** to access project files as they were submitted, or check out the [Project Links](#project-links).
 
 ## Group 6 Members
 - Ong, David Zachary
