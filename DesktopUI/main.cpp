@@ -83,12 +83,13 @@ GLFWwindow* initWindow() {
 	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+	glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 
 	// create the main window
 	GLFWwindow* w = glfwCreateWindow(
-		mode->width, mode->height, // wxh window size
+		mode->width-200, mode->height-200, // wxh window size
 		"CSOPESY Desktop OS Emulator",  // window title
 		NULL,
 		NULL  // share context with other window?
