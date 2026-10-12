@@ -74,13 +74,23 @@ GLFWwindow* initWindow() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+	// fix resolution issue (persisting after shutdown)
+	// get primary monitor and its video mode
+	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	// get native res
+	glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+
 
 	// create the main window
 	GLFWwindow* w = glfwCreateWindow(
-		(1280 * main_scale), (720 * main_scale), // wxh window size
+		mode->width, mode->height, // wxh window size
 		"CSOPESY Desktop OS Emulator",  // window title
-		glfwGetPrimaryMonitor(), // glfwGetPrimaryMonitor() for fullscreen, NULL for windowed
+		NULL,
 		NULL  // share context with other window?
 	);
 
@@ -286,6 +296,13 @@ int main() {
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+	float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+
+	// setup font scaling
+	io.Fonts->AddFontDefault();
+	io.FontGlobalScale = main_scale;
+
 
 	// setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
