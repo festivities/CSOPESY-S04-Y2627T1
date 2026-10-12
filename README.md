@@ -1,36 +1,30 @@
-### Y2627T1 CSOPESY S04
+# Y2627T1 CSOPESY S04 – Group 6
 
-# OS Emulator
-This project is a simple OS emulator that simulates basic operating system functionalities. It provides GUI for users to interact with the emulator.
+This repository contains all projects developed by **CSOPESY – S04, Group 6**.  
+See our **[Releases/Tags](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases)** to access project files as they were submitted, or check out the [Project Links](#project-links).
 
-### Group 6 Members:
+## Group 6 Members
 - Ong, David Zachary
 - Ho, Denise Liana
 - Valle, Jose Edgardo
 - Biacora, Luis Gabriel
 
-### Entry file: 
-- main.cpp (contains main())
+
+## Project Links
+
+### Week 2 Homework – OS Emulator CLI Setup
+- Located in the `.\OSEmulator` folder. See `README.txt` under that folder for details.  
+- **Main Branch:** [OsEmulator](https://github.com/festivities/CSOPESY-S04-Y2627T1/tree/main/OsEmulator)  
+- **Release:** [Week 2 Submission](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases/tag/submission%3Dweek2-os-emulator)
 
 
-## Setup and Build Instructions:
+### MO3 – OS Emulator CLI (Marquee)
+- Located in the `.\OSEmulator` folder. See `README.txt` under that folder for details.  
+- **Main Branch:** [OsEmulator](https://github.com/festivities/CSOPESY-S04-Y2627T1/tree/main/OsEmulator)  
+- **Release:** [Week 4 Submission](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases/tag/submission%3Dweek4-mo3)
 
-This project uses vcpkg in Manifest Mode (`vcpkg.json`) to manage dependencies (GLFW, GLAD, Dear ImGui). You must have vcpkg installed and integrated for Visual Studio to compile the project.
 
-1. If you do not have `vcpkg`, clone it and run the bootstrapper:
-   ```
-	git clone https://github.com/microsoft/vcpkg.git
-   .\vcpkg\bootstrap-vcpkg.bat
-   ```
-
-2. Open a terminal and run the integration command so Visual Studio detects the package manifest:
-   vcpkg integrate install
-
-3. Open the `.sln` file in Visual Studio 2022.
-
-4. Ensure the build config is set to "x64"
-
-5. Build the solution (Ctrl + Shift + B)
-   *Note: first vuild will take a few mins since vcpkg automatically downloads and compiles GLFW, GLAD, and ImGui from source.*
-
-6. Run the Local Windows Debugger.
+### MO4 – OS Emulator Desktop GUI (Dear ImGui)
+- Located in the `.\DesktopUI` folder. See `README.txt` under that folder for details.  
+- **Main Branch:** [DesktopUI](https://github.com/festivities/CSOPESY-S04-Y2627T1/tree/main/DesktopUI)  
+- **Release:** [Week 5 Submission](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases/tag/submission%3Dweek5-mo4)
