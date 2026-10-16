@@ -11,7 +11,9 @@
 
 
 ### How to run: 
-1. Open Week2-OsEmulator.sln in Visual Studio
+1. Open OsEmulator.sln in Visual Studio
 2. Set x64 Debug and press Run/Debug (F5). 
+
+Process logs are written as processXX.txt in the working directory.
 
 Program is a console OS emulator.

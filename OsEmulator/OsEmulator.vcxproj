@@ -140,10 +140,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Marquee.cpp" />
     <ClCompile Include="OperatingSystem.cpp" />
+    <ClCompile Include="Scheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Marquee.h" />
     <ClInclude Include="OperatingSystem.h" />
+    <ClInclude Include="Scheduler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

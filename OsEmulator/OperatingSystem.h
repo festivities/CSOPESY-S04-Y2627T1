@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Marquee.h"
+#include "Scheduler.h"
 #include <iostream>
 #include <string>
 #include <map>
@@ -14,6 +15,7 @@ private:
 	// supported commands and their descriptions
 	std::map<std::string, std::string> commands;
 	Marquee marquee;
+	Scheduler scheduler;
 public:
 
 	// Constructor
@@ -40,4 +42,8 @@ public:
 	void stopMarquee();
 	void setMarqueeText(const std::string& text);
 	void setMarqueeSpeed(int speed);
+
+	// Scheduler control
+	void startScheduler();
+	void screenList();
 };

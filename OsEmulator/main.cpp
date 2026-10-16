@@ -23,6 +23,8 @@ std::string trim(const std::string& text)
 int main() {
     OperatingSystem os;
     os.printMainMenu();
+    // create the processes and start the scheduler
+    os.startScheduler();
 
 	// command input loop
     while (true) {
@@ -54,6 +56,9 @@ int main() {
 		} else if (command == "screen") {
 			// display screen information
 			os.screen();
+		} else if (command == "screen -ls") {
+			// list running and finished processes
+			os.screenList();
 		} else if (command == "scheduler-start") {
 			// start the scheduler
 			os.schedulerStart();

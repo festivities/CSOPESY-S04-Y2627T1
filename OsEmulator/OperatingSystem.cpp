@@ -6,7 +6,7 @@
 #include <iomanip> 
 
 // Constructor implementation
-OperatingSystem::OperatingSystem() : marquee(30) {
+OperatingSystem::OperatingSystem() : marquee(30), scheduler(4) {
 	// set the supported commands and descriptions
 	this->commands = {
 		{"help", "Display available commands"},
@@ -15,6 +15,7 @@ OperatingSystem::OperatingSystem() : marquee(30) {
 
 		{"initialize", "Initialize the operating system"},
 		{"screen", "Show process information"},
+		{"screen -ls", "List running and finished processes"},
 		{"scheduler-start", "Start the scheduler"},
 		{"scheduler-stop", "Stop the scheduler"},
 		{"report-util", "Report system utilization"},
@@ -118,4 +119,19 @@ void OperatingSystem::setMarqueeText(const std::string& text) {
 void OperatingSystem::setMarqueeSpeed(int speed) {
 	this->marquee.setSpeed(speed);
 	std::cout << "Marquee speed set to: " << speed << " ms" << std::endl;
+}
+
+// Scheduler control
+void OperatingSystem::startScheduler() {
+	// create process01..process10 with 100 print instructions each
+	for (int i = 1; i <= 10; ++i) {
+		std::string name = (i < 10 ? "process0" : "process") + std::to_string(i);
+		this->scheduler.addProcess(name, 100);
+	}
+	// start the FCFS scheduler (4 cores)
+	this->scheduler.start();
+}
+
+void OperatingSystem::screenList() {
+	this->scheduler.screenList();
 }

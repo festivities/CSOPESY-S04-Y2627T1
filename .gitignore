@@ -39,3 +39,6 @@ x86/
 
 # vcpkg stuff
 vcpkg_installed/
+
+## --- Process Logs ---
+process*.txt
