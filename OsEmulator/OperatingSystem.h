@@ -5,10 +5,15 @@
 #pragma once
 
 #include "Marquee.h"
+#include "Process.h"
 #include "Scheduler.h"
 #include <iostream>
+#include <memory>
 #include <string>
 #include <map>
+
+// Helper to remove leading and trailing whitespace from string
+std::string trim(const std::string& text);
 
 class OperatingSystem {
 private:
@@ -16,6 +21,11 @@ private:
 	std::map<std::string, std::string> commands;
 	Marquee marquee;
 	Scheduler scheduler;
+	// true after a successful initialize
+	bool initialized;
+
+	// process screen: process-smi, exit (back to the main menu)
+	void processScreen(const std::shared_ptr<Process>& proc);
 public:
 
 	// Constructor
@@ -23,13 +33,15 @@ public:
 
 	// Getters
 	std::map<std::string, std::string> getCommands() const;
+	bool isInitialized() const;
 
 	// Commands
-	void initialize() const;
-	void screen() const;
-	void schedulerStart() const;
-	void schedulerStop() const;
-	void reportUtil() const;
+	void initialize();
+	void screenCreate(const std::string& name);
+	void screenAttach(const std::string& name);
+	void schedulerStart();
+	void schedulerStop();
+	void reportUtil();
 	void clearScreen() const;
 	// exit handled in main
 
@@ -44,6 +56,5 @@ public:
 	void setMarqueeSpeed(int speed);
 
 	// Scheduler control
-	void startScheduler();
 	void screenList();
 };

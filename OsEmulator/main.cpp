@@ -6,34 +6,24 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include "Marquee.h"
 #include "OperatingSystem.h"
 
-// Helper to remove leading and trailing whitespace from string
-std::string trim(const std::string& text)
-{
-	const char* WhiteSpace = " \t\v\r\n";
-	std::size_t start = text.find_first_not_of(WhiteSpace);
-	std::size_t end = text.find_last_not_of(WhiteSpace);
-	return start == std::string::npos ? std::string() : text.substr(start, end - start + 1);
-}
-
 int main() {
     OperatingSystem os;
     os.printMainMenu();
-    // create the processes and start the scheduler
-    os.startScheduler();
 
 	// command input loop
     while (true) {
 		std::string command;
-		
+
 		// prompt user input (lock console while doing so)
 		{
 			std::lock_guard<std::mutex> lk(Marquee::ConsoleMutex());
-			std::cout << "Command>";
+			std::cout << "root:\\> ";
 		}
 		// exit the program if input fails or reaches end of input
 		if (!std::getline(std::cin, command)) {
@@ -41,6 +31,12 @@ int main() {
 		}
 
 		command = trim(command); // trim whitespace
+
+		// before initialize only "initialize" and "exit" are recognized
+		if (command != "exit" && command != "initialize" && !os.isInitialized()) {
+			std::cout << "Please run \"initialize\" first." << std::endl;
+			continue;
+		}
 
 		if (command == "exit") {
 			// immediately exit (stop marquee if running
@@ -51,19 +47,37 @@ int main() {
 			os.clearScreen();
 		}
 		else if (command == "initialize") {
-			// initialize the operating system
+			// read config.txt and start the operating system
 			os.initialize();
-		} else if (command == "screen") {
-			// display screen information
-			os.screen();
-		} else if (command == "screen -ls") {
-			// list running and finished processes
-			os.screenList();
+		} else if (command == "screen" || command.starts_with("screen ")) {
+			// screen -ls, screen -s <name> or screen -r <name>
+			std::istringstream args(command.substr(6));
+			std::string flag;
+			std::string name;
+			std::string extra;
+			args >> flag >> name;
+
+			// -ls takes no name, -s and -r take exactly one name
+			bool valid = (flag == "-ls" && name.empty())
+				|| ((flag == "-s" || flag == "-r") && !name.empty() && !(args >> extra));
+
+			if (!valid) {
+				std::cout << "Usage: screen -s <name> | screen -r <name> | screen -ls" << std::endl;
+			} else if (flag == "-ls") {
+				// list running and finished processes
+				os.screenList();
+			} else if (flag == "-s") {
+				// create a process and open its screen
+				os.screenCreate(name);
+			} else {
+				// open the screen of an existing process
+				os.screenAttach(name);
+			}
 		} else if (command == "scheduler-start") {
-			// start the scheduler
+			// start generating processes
 			os.schedulerStart();
 		} else if (command == "scheduler-stop") {
-			// stop the scheduler
+			// stop generating processes
 			os.schedulerStop();
 		} else if (command == "report-util") {
 			// report utilization
@@ -83,12 +97,12 @@ int main() {
 		}
 		else if (command.starts_with("set_text")) {
 			// set marquee text
-			
+
 			// if no text provided
 			if (command.length() <= 9) {
 				std::cout << "Usage: set_text <text>" << std::endl;
 				continue;
-			} 
+			}
 
 			// extract text and trim whitespace
 			std::string t = command.substr(9);
@@ -105,7 +119,7 @@ int main() {
 		}
 		else if (command.starts_with("set_speed")) {
 			// set marquee speed
-			
+
 			// if no text provided
 			if (command.length() <= 10) {
 				std::cout << "Usage: set_speed <speed>" << std::endl;
@@ -138,6 +152,6 @@ int main() {
 			std::cout << "Command \"" << command << "\" not recognized." << std::endl;
 		}
 	}
-	
+
 	return 0;
 }
