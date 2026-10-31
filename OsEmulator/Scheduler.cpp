@@ -147,8 +147,8 @@ void Scheduler::run() {
 			this->tick++;
 		}
 
-		// one CPU tick is 10 ms
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		// one CPU tick lasts tick-ms milliseconds (10 by default)
+		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.tickMs));
 	}
 }
 

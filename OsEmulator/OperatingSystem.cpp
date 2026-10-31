@@ -129,6 +129,9 @@ void OperatingSystem::initialize() {
 		else if (key == "delays-per-exec" || key == "delay-per-exec") {
 			cfg.delayPerExec = clampToRange(number, 0, maxConfigValue);
 		}
+		else if (key == "tick-ms") {
+			cfg.tickMs = clampToRange(number, 1, 1000);
+		}
 	}
 
 	// max-ins can not be smaller than min-ins
@@ -148,7 +151,8 @@ void OperatingSystem::initialize() {
 		<< "batch-process-freq: " << cfg.batchProcessFreq << std::endl
 		<< "min-ins: " << cfg.minIns << std::endl
 		<< "max-ins: " << cfg.maxIns << std::endl
-		<< "delay-per-exec: " << cfg.delayPerExec << std::endl;
+		<< "delay-per-exec: " << cfg.delayPerExec << std::endl
+		<< "tick-ms: " << cfg.tickMs << std::endl;
 
 	// start the scheduler. It keeps running until the program exits
 	this->scheduler.start(cfg);
