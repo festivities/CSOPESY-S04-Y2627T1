@@ -1,70 +1,20 @@
 // CSOPESY S04-Y2627T1 - GROUP 6
-// This file contains the implementation of the Process and Scheduler classes, which run
-// the FCFS scheduler. Scheduler and core threads never print to the console.
+// This file contains the implementation of the Scheduler class. One scheduler thread runs
+// a tick loop that moves processes between the ready queue, the cores and the sleep list.
+// The scheduler thread never prints to the console.
 //
 
 #include "Scheduler.h"
-#include "Marquee.h"
 #include <chrono>
-#include <ctime>
-#include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
-// Helper to get the current local time as %m/%d/%Y %I:%M:%S%p
-// https://en.cppreference.com/w/cpp/io/manip/put_time
-std::string timeNow() {
-	std::time_t now = std::time(nullptr);
-	std::tm local{};
-	// https://en.cppreference.com/w/c/chrono/localtime
-	localtime_s(&local, &now);
-	std::ostringstream out;
-	out << std::put_time(&local, "%m/%d/%Y %I:%M:%S%p");
-	return out.str();
-}
-
-// Process implementation
-Process::Process(const std::string& name, int total) {
-	this->name = name;
-	this->created = timeNow();
-	this->total = total;
-	this->executed = 0;
-
-	// create (or truncate) the log file with its header
-	// https://en.cppreference.com/w/cpp/io/basic_ofstream
-	std::ofstream out(this->name + ".txt", std::ios::trunc);
-	out << "Process name: " << this->name << std::endl
-		<< "Logs:" << std::endl << std::endl;
-}
-
-void Process::print(int core) {
-	// open and close per line so every line is written right away
-	std::ofstream out(this->name + ".txt", std::ios::app);
-	out << "(" << timeNow() << ") Core:" << core
-		<< " \"Hello world from " << this->name << "!\"" << std::endl;
-	this->executed++;
-}
-
-std::string Process::getName() const {
-	return this->name;
-}
-
-std::string Process::getCreated() const {
-	return this->created;
-}
-
-int Process::getTotal() const {
-	return this->total;
-}
-
-int Process::getExecuted() const {
-	return this->executed.load();
-}
-
 // Scheduler implementation
-Scheduler::Scheduler(int numCores) {
-	this->cores.resize(numCores);
+Scheduler::Scheduler() {
+	this->tick = 0;
+	this->genCounter = 0;
+	this->generating = false;
+	this->nextNameNumber = 1;
 	this->running = false;
 }
 
@@ -72,119 +22,207 @@ Scheduler::~Scheduler() {
 	this->stop();
 }
 
-void Scheduler::addProcess(const std::string& name, int instructions) {
-	// build the process before taking the lock (creates its log file)
-	std::shared_ptr<Process> proc = std::make_shared<Process>(name, instructions);
-	std::lock_guard<std::mutex> lk(this->mtx);
-	this->readyQueue.push(proc);
-}
-
-void Scheduler::start() {
+void Scheduler::start(const SchedulerConfig& cfg) {
 	// if running already, do nothing
 	if (this->running.load()) return;
-	this->running.store(true);
 
-	// start the scheduler thread and one worker thread per core
-	// https://en.cppreference.com/w/cpp/thread/thread/thread
-	this->schedulerThread = std::thread(&Scheduler::schedule, this);
-	for (std::size_t i = 0; i < this->cores.size(); ++i) {
-		this->coreThreads.emplace_back(&Scheduler::runCore, this, static_cast<int>(i));
-	}
+	// one core slot per cpu, all idle
+	this->config = cfg;
+	this->cores.resize(static_cast<std::size_t>(this->config.numCpu));
+
+	// start the tick loop. It keeps running until the program exits
+	this->running.store(true);
+	this->schedulerThread = std::thread(&Scheduler::run, this);
 }
 
 void Scheduler::stop() {
 	if (!this->running.load()) return;
 	this->running.store(false);
 
-	// wait for every thread to finish
+	// wait for the tick loop to end (it checks the flag every tick)
 	// https://en.cppreference.com/w/cpp/thread/thread/join
 	if (this->schedulerThread.joinable()) {
 		this->schedulerThread.join();
 	}
-	for (std::thread& t : this->coreThreads) {
-		if (t.joinable()) {
-			t.join();
-		}
-	}
-	this->coreThreads.clear();
 }
 
-void Scheduler::schedule() {
+bool Scheduler::startGenerating() {
+	std::lock_guard<std::mutex> lk(this->mtx);
+	if (this->generating) return false;
+	this->generating = true;
+	return true;
+}
+
+bool Scheduler::stopGenerating() {
+	std::lock_guard<std::mutex> lk(this->mtx);
+	if (!this->generating) return false;
+	this->generating = false;
+	return true;
+}
+
+std::shared_ptr<Process> Scheduler::addNamedProcess(const std::string& name) {
+	std::lock_guard<std::mutex> lk(this->mtx);
+	// a name can be reused only after its process finished
+	std::shared_ptr<Process> existing = this->findProcess(name);
+	if (existing && !existing->isFinished()) return nullptr;
+	return this->makeProcess(name);
+}
+
+std::shared_ptr<Process> Scheduler::findAttachable(const std::string& name) {
+	std::lock_guard<std::mutex> lk(this->mtx);
+	std::shared_ptr<Process> found = this->findProcess(name);
+	if (!found || found->isFinished()) return nullptr;
+	return found;
+}
+
+std::string Scheduler::processSmi(const std::shared_ptr<Process>& proc) {
+	std::lock_guard<std::mutex> lk(this->mtx);
+	return proc->smi();
+}
+
+// Tick loop: one pass of the loop is one CPU tick
+void Scheduler::run() {
 	while (this->running.load()) {
 		{
 			std::lock_guard<std::mutex> lk(this->mtx);
-			// FCFS: give each idle core (lowest id first) the next process in the queue
-			for (std::size_t i = 0; i < this->cores.size() && !this->readyQueue.empty(); ++i) {
-				if (!this->cores[i]) {
-					this->cores[i] = this->readyQueue.front();
-					this->readyQueue.pop();
+
+			// 1. sleeping processes whose wake-up tick has come go to the back of the ready queue
+			std::vector<std::shared_ptr<Process>> stillSleeping;
+			for (const std::shared_ptr<Process>& proc : this->sleeping) {
+				if (proc->getWakeTick() <= this->tick) {
+					this->readyQueue.push(proc);
+				}
+				else {
+					stillSleeping.push_back(proc);
 				}
 			}
+			this->sleeping = stillSleeping;
+
+			// 2. while generating, make a new process every batch-process-freq ticks
+			if (this->generating) {
+				this->genCounter++;
+				if (this->genCounter % this->config.batchProcessFreq == 0) {
+					this->makeProcess(this->nextAutoName());
+				}
+			}
+
+			// 3. every busy core runs one tick of its process
+			for (std::size_t i = 0; i < this->cores.size(); i++) {
+				std::shared_ptr<Process> proc = this->cores[i];
+				if (!proc) continue;
+
+				TickResult result = proc->runTick(static_cast<int>(i), this->config.delayPerExec, this->tick);
+				// round robin: the process gives up the core when its time slice is used up
+				bool timeUp = this->config.scheduler == "rr" && proc->getQuantumUsed() >= this->config.quantumCycles;
+
+				if (result == FINISHED) {
+					this->finished.push_back(proc);
+				}
+				else if (result == SLEEPING) {
+					this->sleeping.push_back(proc);
+				}
+				else if (timeUp) {
+					this->readyQueue.push(proc);
+				}
+				else {
+					// still running, keeps the core
+					continue;
+				}
+
+				// the process left the core
+				proc->leaveCore();
+				this->cores[i] = nullptr;
+			}
+
+			// 4. every idle core (lowest id first) takes the next process in the ready queue
+			for (std::size_t i = 0; i < this->cores.size() && !this->readyQueue.empty(); i++) {
+				if (this->cores[i]) continue;
+				std::shared_ptr<Process> proc = this->readyQueue.front();
+				this->readyQueue.pop();
+				proc->enterCore(static_cast<int>(i));
+				this->cores[i] = proc;
+			}
+
+			// 5. next tick
+			this->tick++;
 		}
-		// poll every 10 ms
+
+		// one CPU tick is 10 ms
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
 
-void Scheduler::runCore(int core) {
-	while (this->running.load()) {
-		// get the process assigned to this core
-		std::shared_ptr<Process> proc;
-		{
-			std::lock_guard<std::mutex> lk(this->mtx);
-			proc = this->cores[core];
-		}
+// create a process with the next id and put it in the ready queue
+std::shared_ptr<Process> Scheduler::makeProcess(const std::string& name) {
+	int id = static_cast<int>(this->all.size()) + 1;
+	std::shared_ptr<Process> proc = std::make_shared<Process>(name, id, this->config.minIns, this->config.maxIns);
+	this->all.push_back(proc);
+	this->readyQueue.push(proc);
+	return proc;
+}
 
-		// core is idle, wait for the scheduler to assign a process
-		if (!proc) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			continue;
+// newest process with this name (nullptr if there is none)
+std::shared_ptr<Process> Scheduler::findProcess(const std::string& name) {
+	std::shared_ptr<Process> found;
+	for (const std::shared_ptr<Process>& proc : this->all) {
+		if (proc->getName() == name) {
+			found = proc;
 		}
+	}
+	return found;
+}
 
-		// non-preemptive: run every instruction before the core is released
-		while (proc->getExecuted() < proc->getTotal()) {
-			if (!this->running.load()) return; // stopped mid-run
-			// each instruction takes 50 ms
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			proc->print(core);
+// next generated name (p01, p02, ... p100, ...), skipping names that are already in use
+std::string Scheduler::nextAutoName() {
+	while (true) {
+		std::string number = std::to_string(this->nextNameNumber);
+		this->nextNameNumber++;
+		if (number.size() < 2) {
+			number = "0" + number;
 		}
-
-		// release the core and record the process as finished
-		std::lock_guard<std::mutex> lk(this->mtx);
-		this->cores[core] = nullptr;
-		this->finished.push_back(proc);
+		std::string name = "p" + number;
+		if (!this->findProcess(name)) {
+			return name;
+		}
 	}
 }
 
-void Scheduler::screenList() {
+// text for screen -ls and report-util
+std::string Scheduler::report() {
 	std::ostringstream out;
-	out << std::left;
 	std::string line(38, '-');
-	out << line << std::endl << "Running processes:" << std::endl;
-	{
-		std::lock_guard<std::mutex> lk(this->mtx);
-		// running processes, ordered by core id
-		for (std::size_t i = 0; i < this->cores.size(); ++i) {
-			const std::shared_ptr<Process>& proc = this->cores[i];
-			if (!proc) continue;
-			out << std::setw(12) << proc->getName()
-				<< "(" << proc->getCreated() << ")   "
-				<< std::setw(11) << ("Core: " + std::to_string(i))
-				<< proc->getExecuted() << " / " << proc->getTotal() << std::endl;
-		}
+	std::lock_guard<std::mutex> lk(this->mtx);
 
-		out << std::endl << "Finished processes:" << std::endl;
-		// finished processes, in completion order
-		for (const std::shared_ptr<Process>& proc : this->finished) {
-			out << std::setw(12) << proc->getName()
-				<< "(" << proc->getCreated() << ")   "
-				<< std::setw(11) << "Finished"
-				<< proc->getExecuted() << " / " << proc->getTotal() << std::endl;
-		}
+	// cores in use and the utilization
+	std::size_t used = 0;
+	for (const std::shared_ptr<Process>& proc : this->cores) {
+		if (proc) used++;
+	}
+	std::size_t total = this->cores.size();
+	out << "CPU utilization: " << (used * 100 / total) << "%" << std::endl
+		<< "Cores used: " << used << std::endl
+		<< "Cores available: " << (total - used) << std::endl
+		<< std::endl << line << std::endl;
+
+	// running processes, ordered by core id
+	out << std::left << "Running processes:" << std::endl;
+	for (const std::shared_ptr<Process>& proc : this->cores) {
+		if (!proc) continue;
+		out << std::setw(12) << proc->getName()
+			<< "(" << proc->getCreated() << ")   "
+			<< std::setw(11) << ("Core: " + std::to_string(proc->getCore()))
+			<< proc->getExecutedLines() << " / " << proc->getTotalLines() << std::endl;
+	}
+
+	// finished processes, in completion order
+	out << std::endl << "Finished processes:" << std::endl;
+	for (const std::shared_ptr<Process>& proc : this->finished) {
+		out << std::setw(12) << proc->getName()
+			<< "(" << proc->getCreated() << ")   "
+			<< std::setw(11) << "Finished"
+			<< proc->getExecutedLines() << " / " << proc->getTotalLines() << std::endl;
 	}
 	out << line << std::endl;
 
-	// print while holding the console lock
-	std::lock_guard<std::mutex> lk(Marquee::ConsoleMutex());
-	std::cout << out.str() << std::flush;
+	return out.str();
 }
