@@ -39,8 +39,7 @@ int main() {
 		}
 
 		if (command == "exit") {
-			// immediately exit (stop marquee if running
-			os.stopMarquee();
+			// immediately exit (destructors stop the marquee and scheduler threads)
 			return 0;
 		} else if (command == "clear") {
 			//  clear the console

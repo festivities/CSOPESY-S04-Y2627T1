@@ -23,6 +23,8 @@ struct SchedulerConfig {
 	uint64_t minIns = 1000;
 	uint64_t maxIns = 2000;
 	uint64_t delayPerExec = 0;
+	// real time length of one CPU tick in milliseconds (optional key, not in the spec)
+	uint64_t tickMs = 10;
 };
 
 // tick based CPU scheduler. One thread runs a tick loop that drives every core.

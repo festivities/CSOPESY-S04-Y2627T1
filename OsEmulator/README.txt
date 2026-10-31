@@ -22,6 +22,7 @@
    - `batch-process-freq`: CPU ticks between generated processes
    - `min-ins` / `max-ins`: range of lines per generated process
    - `delay-per-exec` (or `delays-per-exec`): busy-wait ticks between instructions
+   - `tick-ms` (1-1000, optional, default 10): real time length of one CPU tick in milliseconds
 2. Commands:
    - `initialize`, `exit`, `clear`, `help`
    - `screen -s <name>`: create a process and open its screen (`process-smi` shows it, `exit` goes back to the main menu)
