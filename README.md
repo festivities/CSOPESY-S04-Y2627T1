@@ -12,13 +12,13 @@ This repository contains all projects developed by **CSOPESY – S04, Group 6**.
 ## Project Links
 
 ### Week 2 Homework – OS Emulator CLI Setup
-- Located in the `.\OSEmulator` folder. See `README.txt` under that folder for details.  
+- Located in the `.\OsEmulator` folder. See `README.txt` under that folder for details.  
 - **Main Branch:** [OsEmulator](https://github.com/festivities/CSOPESY-S04-Y2627T1/tree/main/OsEmulator)  
 - **Release:** [Week 2 Submission](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases/tag/submission%3Dweek2-os-emulator)
 
 
 ### MO3 – OS Emulator CLI (Marquee)
-- Located in the `.\OSEmulator` folder. See `README.txt` under that folder for details.  
+- Located in the `.\OsEmulator` folder. See `README.txt` under that folder for details.  
 - **Main Branch:** [OsEmulator](https://github.com/festivities/CSOPESY-S04-Y2627T1/tree/main/OsEmulator)  
 - **Release:** [Week 4 Submission](https://github.com/festivities/CSOPESY-S04-Y2627T1/releases/tag/submission%3Dweek4-mo3)
 

@@ -274,7 +274,7 @@ void OperatingSystem::printMainMenu() const {
 \____//____/\____/_/   /_____//____/  /_/
 )" << std::endl;
 
-	std::cout << "Welcome to CSOPESY!" << std::endl << std::endl;
+	std::cout << "Welcome to CSOPESY OS Emulator!" << std::endl << std::endl;
 	std::cout << "Group developer:" << std::endl;
 	std::cout << "Ong, David Zachary" << std::endl;
 	std::cout << "Ho, Denise Liana" << std::endl;
