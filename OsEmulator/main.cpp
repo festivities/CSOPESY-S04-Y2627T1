@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -57,8 +58,10 @@ int main() {
 			args >> flag >> name;
 
 			// -ls takes no name, -s and -r take exactly one name
+			bool validName = !name.empty()
+				&& name.find_first_of(" \t\v\r\n") == std::string::npos;
 			bool valid = (flag == "-ls" && name.empty())
-				|| ((flag == "-s" || flag == "-r") && !name.empty() && !(args >> extra));
+				|| ((flag == "-s" || flag == "-r") && validName && !(args >> extra));
 
 			if (!valid) {
 				std::cout << "Usage: screen -s <name> | screen -r <name> | screen -ls" << std::endl;
@@ -94,17 +97,11 @@ int main() {
 			// stop marquee animation
 			os.stopMarquee();
 		}
-		else if (command.starts_with("set_text")) {
+		else if (command == "set_text" || command.starts_with("set_text ")) {
 			// set marquee text
 
-			// if no text provided
-			if (command.length() <= 9) {
-				std::cout << "Usage: set_text <text>" << std::endl;
-				continue;
-			}
-
 			// extract text and trim whitespace
-			std::string t = command.substr(9);
+			std::string t = command.substr(std::string("set_text").size());
 			t = trim(t);
 
 			// check if no text provided
@@ -116,16 +113,10 @@ int main() {
 			// set if valid
 			os.setMarqueeText(std::string(t));
 		}
-		else if (command.starts_with("set_speed")) {
+		else if (command == "set_speed" || command.starts_with("set_speed ")) {
 			// set marquee speed
 
-			// if no text provided
-			if (command.length() <= 10) {
-				std::cout << "Usage: set_speed <speed>" << std::endl;
-				continue;
-			}
-
-			std::string sp = command.substr(10);
+			std::string sp = trim(command.substr(std::string("set_speed").size()));
 
 			// check if speed is empty
 			if (sp.empty()) {
@@ -135,7 +126,14 @@ int main() {
 
 			// convert speed to integer and set it
 			try {
-				int speed = std::stoi(trim(sp));
+				std::size_t parsed = 0;
+				long long speedValue = std::stoll(sp, &parsed);
+				if (parsed != sp.size()
+					|| speedValue <= 0
+					|| speedValue > std::numeric_limits<int>::max()) {
+					throw std::invalid_argument("invalid marquee speed");
+				}
+				int speed = static_cast<int>(speedValue);
 				os.setMarqueeSpeed(speed);
 			}
 			catch (const std::invalid_argument&) {

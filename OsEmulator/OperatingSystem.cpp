@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <set>
 #include <stdexcept>
 
 // largest value allowed by the config keys that have a 2^32 limit
@@ -25,8 +26,9 @@ std::string trim(const std::string& text)
 // https://en.cppreference.com/w/cpp/string/basic_string/stol
 static bool parseNumber(const std::string& text, long long& number) {
 	try {
-		number = std::stoll(text);
-		return true;
+		std::size_t parsed = 0;
+		number = std::stoll(text, &parsed);
+		return parsed == text.size();
 	}
 	catch (const std::logic_error&) {
 		return false;
@@ -95,42 +97,86 @@ void OperatingSystem::initialize() {
 	// start from the defaults (same values as the sample config.txt)
 	SchedulerConfig cfg;
 
-	// read key value pairs. Unknown keys and values that are not numbers are ignored
+	// read key value pairs.
+	// unknown keys ignored but known values must be valid
+	std::set<std::string> seenKeys; // track keys
 	std::string key;
 	std::string value;
-	while (in >> key >> value) {
+	while (in >> key) {
+		if (!(in >> value)) {
+			std::cout << "Error: missing value for configuration key \"" << key << "\" in config.txt." << std::endl;
+			return;
+		}
+
 		if (key == "scheduler") {
 			// the value may be quoted, e.g. "rr"
 			cfg.scheduler.clear();
 			for (char ch : value) {
 				if (ch != '"') cfg.scheduler += ch;
 			}
+			seenKeys.insert(key);
 			continue;
 		}
 
+		const bool isNumericKey = key == "num-cpu"
+			|| key == "quantum-cycles"
+			|| key == "batch-process-freq"
+			|| key == "min-ins"
+			|| key == "max-ins"
+			|| key == "delays-per-exec"
+			|| key == "delay-per-exec"
+			|| key == "tick-ms";
+		if (!isNumericKey) continue;
+
 		long long number = 0;
-		if (!parseNumber(value, number)) continue;
+		if (!parseNumber(value, number)) {
+			std::cout << "Error: invalid value \"" << value
+				<< "\" for configuration key in config.txt." << std::endl;
+			return;
+		}
 
 		if (key == "num-cpu") {
 			cfg.numCpu = clampToRange(number, 1, 128);
+			seenKeys.insert(key);
 		}
 		else if (key == "quantum-cycles") {
 			cfg.quantumCycles = clampToRange(number, 1, maxConfigValue);
+			seenKeys.insert(key);
 		}
 		else if (key == "batch-process-freq") {
 			cfg.batchProcessFreq = clampToRange(number, 1, maxConfigValue);
+			seenKeys.insert(key);
 		}
 		else if (key == "min-ins") {
 			cfg.minIns = clampToRange(number, 1, maxConfigValue);
+			seenKeys.insert(key);
 		}
 		else if (key == "max-ins") {
 			cfg.maxIns = clampToRange(number, 1, maxConfigValue);
+			seenKeys.insert(key);
 		}
 		else if (key == "delays-per-exec" || key == "delay-per-exec") {
 			cfg.delayPerExec = clampToRange(number, 0, maxConfigValue);
+			seenKeys.insert("delays-per-exec");
 		}
 		else if (key == "tick-ms") {
 			cfg.tickMs = clampToRange(number, 1, 1000);
+			seenKeys.insert(key);
+		}
+	}
+
+	const std::string requiredKeys[] = {
+		"num-cpu", "scheduler", "quantum-cycles", "batch-process-freq",
+		"min-ins", "max-ins", "delays-per-exec"
+	};
+
+	// check all required keys present
+	// if missing, prompt error
+	for (const std::string& requiredKey : requiredKeys) {
+		if (!seenKeys.contains(requiredKey)) {
+			std::cout << "Error: missing required configuration key \""
+				<< requiredKey << "\" in config.txt." << std::endl;
+			return;
 		}
 	}
 
