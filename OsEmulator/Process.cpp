@@ -95,43 +95,44 @@ Process::Process(const std::string& name, int id, uint64_t minIns, uint64_t maxI
 	this->created = timeNow();
 	this->core = -1;
 
-	// pick how many lines this process will run. The instructions are made on the first run
+	// pick how many lines this process will run. The instructions are made while it runs
 	this->totalLines = randomBetween(minIns, maxIns);
 	this->executedLines = 0;
+	this->plannedLines = 0;
 	this->delayLeft = 0;
 	this->quantumUsed = 0;
 	this->wakeTick = 0;
-	this->generated = false;
 	this->finished = false;
 	this->pc = 0;
 }
 
-// add instructions for `remaining` executed lines. FOR loops are nested at most 3 deep
-void Process::generate(uint64_t remaining, int depth) {
-	while (remaining > 0) {
-		// 1 in 10 chance of a loop (only with room for a body and while nesting is below 3)
-		if (depth < 3 && remaining >= 4 && randomBetween(1, 10) == 1) {
-			uint64_t repeats = randomBetween(2, 4);
-			uint64_t bodyLines = randomBetween(1, std::min<uint64_t>(remaining / repeats, 8));
+// add one instruction, or one FOR loop with its body, that runs at most `remaining` lines.
+// returns the number of lines it runs. FOR loops are nested at most 3 deep
+uint64_t Process::generate(uint64_t remaining, int depth) {
+	// 1 in 10 chance of a loop (only with room for a body and while nesting is below 3)
+	if (depth < 3 && remaining >= 4 && randomBetween(1, 10) == 1) {
+		uint64_t repeats = randomBetween(2, 4);
+		uint64_t bodyLines = randomBetween(1, std::min<uint64_t>(remaining / repeats, 8));
 
-			// emit the FOR header now and fill in the body length after the body is made
-			std::size_t header = this->instructions.size();
-			Instruction loop{};
-			loop.type = FOR;
-			loop.a.value = static_cast<uint16_t>(repeats);
-			this->instructions.push_back(loop);
+		// emit the FOR header now and fill in the body length after the body is made
+		std::size_t header = this->instructions.size();
+		Instruction loop{};
+		loop.type = FOR;
+		loop.a.value = static_cast<uint16_t>(repeats);
+		this->instructions.push_back(loop);
 
-			this->generate(bodyLines, depth + 1);
-			this->instructions[header].b.value = static_cast<uint16_t>(this->instructions.size() - header - 1);
-
-			remaining -= repeats * bodyLines;
+		// body: instructions (or nested loops) until it runs bodyLines lines
+		uint64_t bodyLeft = bodyLines;
+		while (bodyLeft > 0) {
+			bodyLeft -= this->generate(bodyLeft, depth + 1);
 		}
-		else {
-			// note: every instruction is stored, so a huge max-ins uses a lot of memory
-			this->instructions.push_back(randomSimple());
-			remaining--;
-		}
+		this->instructions[header].b.value = static_cast<uint16_t>(this->instructions.size() - header - 1);
+
+		return repeats * bodyLines;
 	}
+
+	this->instructions.push_back(randomSimple());
+	return 1;
 }
 
 uint16_t Process::readOperand(const Operand& op) {
@@ -146,16 +147,18 @@ uint16_t Process::readOperand(const Operand& op) {
 TickResult Process::runTick(int cpu, uint64_t delay, uint64_t tick) {
 	this->quantumUsed++;
 
-	// first run on a core: build the instruction list
-	if (!this->generated) {
-		this->generate(this->totalLines, 0);
-		this->generated = true;
-	}
-
 	// busy-wait (delay-per-exec): stay on the core and do nothing this tick
 	if (this->delayLeft > 0) {
 		this->delayLeft--;
 		return RUNNING;
+	}
+
+	// the current top level instruction is done (or this is the first run): generate the next one.
+	// only one is kept at a time, so memory does not grow with max-ins (which can be up to 2^32)
+	if (this->pc >= this->instructions.size()) {
+		this->instructions.clear();
+		this->pc = 0;
+		this->plannedLines += this->generate(this->totalLines - this->plannedLines, 0);
 	}
 
 	// FOR headers take no tick: push their loop frames and go on to the next instruction
@@ -218,8 +221,8 @@ TickResult Process::runTick(int cpu, uint64_t delay, uint64_t tick) {
 		this->loops.pop_back();
 	}
 
-	// ran past the last instruction: the process is done
-	if (this->pc >= this->instructions.size()) {
+	// ran all of its lines: the process is done
+	if (this->executedLines >= this->totalLines) {
 		this->finished = true;
 		// free what is not needed any more (name, logs and counters stay for process-smi)
 		this->instructions.clear();

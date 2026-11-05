@@ -51,8 +51,9 @@ private:
 	// core the process is on (-1 when it is not on a core)
 	int core;
 
-	// executed lines so far and the total number of lines the process will run
+	// executed lines so far, lines generated so far and the total number of lines the process will run
 	uint64_t executedLines;
+	uint64_t plannedLines;
 	uint64_t totalLines;
 	// ticks left of the busy-wait before the next instruction (delay-per-exec)
 	uint64_t delayLeft;
@@ -60,11 +61,11 @@ private:
 	uint64_t quantumUsed;
 	// tick at which a sleeping process wakes up
 	uint64_t wakeTick;
-	// true once the instruction list has been generated (first run on a core)
-	bool generated;
 	bool finished;
 
-	// flat instruction list, program counter and loop stack
+	// flat instruction list, program counter and loop stack.
+	// only the current top level instruction is kept (one simple instruction or one FOR
+	// loop with its body), the next one is generated when it is done
 	std::vector<Instruction> instructions;
 	std::size_t pc;
 	std::vector<LoopFrame> loops;
@@ -75,13 +76,14 @@ private:
 	// log lines written by PRINT, e.g. (10/31/2026 09:15:22AM) Core:0 "Hello world from p01!"
 	std::vector<std::string> logs;
 
-	// add instructions for `remaining` executed lines (recursive for FOR loops)
-	void generate(uint64_t remaining, int depth);
+	// add one instruction (or one FOR loop with its body) that runs at most `remaining` lines.
+	// returns the number of lines it runs (recursive for FOR loops)
+	uint64_t generate(uint64_t remaining, int depth);
 	// value of an operand (undeclared variables read as 0 and get declared)
 	uint16_t readOperand(const Operand& op);
 
 public:
-	// constructor (picks the number of lines, the instructions are made on the first run)
+	// constructor (picks the number of lines, the instructions are made while it runs)
 	Process(const std::string& name, int id, uint64_t minIns, uint64_t maxIns);
 
 	// run one CPU tick on the given core and report what happened
