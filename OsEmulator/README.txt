@@ -71,7 +71,7 @@ tick-ms 10
 ### Screen commands
 - `screen -s <name>`: create a named process and enter its process screen.
 - `screen -r <name>`: attach to an existing unfinished process.
-- `screen -ls`: display CPU utilization, core usage, running processes, and finished processes. The current implementation may also show ready and sleeping processes as diagnostic sections.
+- `screen -ls`: display CPU utilization, core usage, running processes (processes currently on a core), and finished processes.
 
 Inside a process screen:
 
